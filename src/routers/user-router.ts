@@ -1,5 +1,5 @@
 
-import express, { Request, Response, NextFunction, } from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 import { User } from "../models/User"
 import { UserIdNaN } from '../errors/User-Id-NaN'
 import { authentificationMiddleware } from '../middleware/authentification-middleware'
@@ -11,12 +11,12 @@ export const userRouter = express.Router()
 userRouter.use(authentificationMiddleware)
 
 //Find Users -- check instructions for authorization persmission
-userRouter.get("/", authorizationMiddleware(["Admin", "Finance-manager"]), (req:Request, res:Response, next:NextFunction)=>{
+userRouter.get("/", authorizationMiddleware(["Finance-manager"]), (req:Request, res:Response, next:NextFunction)=>{
     res.json(users)
 })
 
-//Find Users by ID
-userRouter.get("/:id", authorizationMiddleware(["Admin"]), (req:Request, res:Response)=>{ //Need specific authorization!
+//Find Users by ID -- it should let the user with that Id view their own records, but Idk how to get the authorization middleware to work
+userRouter.get("/:id", authorizationMiddleware(["Finance-manager"]), (req:Request, res:Response)=>{ //Need specific authorization!
     let {id} = req.params
     if(isNaN(+id)){
         //send a response telling them they need to give us a number
@@ -36,14 +36,52 @@ userRouter.get("/:id", authorizationMiddleware(["Admin"]), (req:Request, res:Res
 })
 
 
-//Update user
+//Update user (need authorization for Admin)
+userRouter.patch("/", authorizationMiddleware(["Admin"]), (req:Request, res: Response,) => {
+    let id = req.body.userId
 
-//Use reimbursement router for all others
+    if (!id) {
+        throw res.status(404).send("User does not exist!")
+    } else if (isNaN(+id)){
+        throw new UserIdNaN
+    } else {
+        let updated = false
+        for (const user of users){
+            if (user.userId === +id) {
+                let username = req.body.username
+                let password = req.body.password
+                let firstName = req.body.firstName
+                let lastName = req.body.lastName
+                let email = req.body.email
+                let role = req.body.role
 
-
-
-
-
+                if(username){
+                    user.username = username
+                }
+                if(password){
+                    user.password = password
+                }
+                if(firstName){
+                    user.firstName = firstName
+                }
+                if(lastName){
+                    user.lastName = lastName
+                }
+                if(email){
+                    user.email = email
+                }
+                if (role){ //This should be a string, but it must affect the id
+                    user.role = role
+                }
+                res.json(user)
+                updated = true
+            }
+        }
+        if (!updated) {
+            res.status(404).send("User failed to update")
+        }
+    }
+})
 
 
 export let users:User[]  = [
@@ -75,7 +113,7 @@ export let users:User[]  = [
 
     {
         userId: 3, // primary key
-        username: "AmdinAmy", // not null, unique
+        username: "AdminAmy", // not null, unique
         password: "UnlimitedPower", // not null
         firstName: "Amy", // not null
         lastName: "Johnson", // not null

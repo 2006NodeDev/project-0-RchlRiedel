@@ -7,6 +7,7 @@ import { AuthFailureError } from "./errors/Authentification-Failure"
 
 import { loggingMiddleware } from "./middleware/logging-Middleware"
 import { sessionMiddleware } from "./middleware/session-middleware"
+import { reimbursementRouter } from "./routers/reimbursement-router"
 
 
 const app = express() //call application from express
@@ -21,6 +22,7 @@ app.use(loggingMiddleware)
 app.use(sessionMiddleware)
 
 app.use("/users", userRouter)
+app.use("/reimbursements", reimbursementRouter)
 
 app.post("/login", (req:Request, res:Response) => {
 //pretty much identical to what is in lightly-burning
