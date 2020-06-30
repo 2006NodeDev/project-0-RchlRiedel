@@ -3,6 +3,8 @@ import express, { Request, Response, NextFunction } from 'express'
 import { authentificationMiddleware } from '../middleware/authentification-middleware'
 import { authorizationMiddleware } from '../middleware/authorization-middleware'
 import { getAllUsers, updateUser, findUsersById } from '../daos/users-dao'
+import { User } from '../models/User'
+import { UserIdNaN } from '../errors/User-Id-NaN'
 
 export const userRouter = express.Router()
 
@@ -10,7 +12,7 @@ export const userRouter = express.Router()
 userRouter.use(authentificationMiddleware)
 
 //Find Users -- check instructions for authorization persmission
-userRouter.get("/", authorizationMiddleware(["Finance-manager"]), async (req:Request, res:Response, next:NextFunction)=>{
+userRouter.get("/", authorizationMiddleware(["Finance-manager", "Admin"]), async (req:Request, res:Response, next:NextFunction)=>{
     try {
         //Let's try not being asynch and see what happens
         let allUsers = await getAllUsers() //thinking in abstraction
@@ -20,13 +22,13 @@ userRouter.get("/", authorizationMiddleware(["Finance-manager"]), async (req:Req
     }})
 
 //Find user by id
-userRouter.get("/:id",  authorizationMiddleware(["Finance-manager"]), async (req:Request, res:Response, next:NextFunction)=>{
-    let {id} = req.params
-    if(isNaN(+id)){
-        res.status(400).send("Id needs to be a number")
+userRouter.get("/:userId",  authorizationMiddleware(["Finance-manager", "Admin"]), async (req:Request, res:Response, next:NextFunction)=>{
+    let {userId} = req.params
+    if(isNaN(+userId)){
+        next(new UserIdNaN)
     } else {
         try {
-            let user = await findUsersById(+id)
+            let user = await findUsersById(+userId)
             res.json(user)
         } catch(e) {
             next(e)
@@ -36,41 +38,30 @@ userRouter.get("/:id",  authorizationMiddleware(["Finance-manager"]), async (req
 
 //Update user
 userRouter.patch("/", authorizationMiddleware(["Admin"]), async (req:Request, res: Response, next:NextFunction) => {
-    let {userId} = req.body 
+    let {userId, username, password, firstName, lastName, email, role } = req.body
 
     if (!userId || isNaN(req.body.userId)){
         res.status(400).send('Please provide user Id number')
-    } else {
-        let user = await findUsersById(+userId); //pull up the user we wish to update
+    } else { //changed because other way (going off of id) was being complicated
+        let updatedUser:User = {
+            userId,
+            username,
+            password,
+            firstName,
+            lastName,
+            email,
+            role
+        }
+        updatedUser.username = username || undefined
+        updatedUser.password = password || undefined
+        updatedUser.firstName = firstName || undefined
+        updatedUser.lastName = lastName || undefined
+        updatedUser.email = email || undefined
+        updatedUser.role = role || undefined
 
-        let username = req.body.username
-        let password = req.body.password
-        let firstName = req.body.firstName
-        let lastName = req.body.lastName
-        let email = req.body.email
-        let role = req.body.role
-        //defining variables based on body, then (if they exist) updating the user
-        if(username){
-            user.username = username
-        }
-        if(password){
-            user.password = password
-        }
-        if(firstName){
-            user.firstName = firstName
-        }
-        if(lastName){
-            user.lastName = lastName
-        }
-        if(email){
-            user.email = email
-        }
-        if (role){ //This should be a string, but it must affect the id
-            user.role = role
-        }
         try {
-            let updatedUser = await updateUser(user)
-            res.json(updatedUser)
+            let updatedUserResults = await updateUser(updatedUser)
+            res.json(updatedUserResults)
         } catch (e) {
             next
         }

@@ -11,7 +11,7 @@ reimbursementStatusRouter.get("/:statusId", authorizationMiddleware(["Finance-ma
     let {statusId} = req.params
     if(isNaN(+statusId)){
         //send a response telling them they need to give us a number
-        throw new StatusIdNaN
+        next(new StatusIdNaN)
     } else {
         try {
             let reimbursement = await findReimbursementByStatus(+statusId)

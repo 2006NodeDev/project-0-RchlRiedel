@@ -12,8 +12,8 @@ export async function getAllUsers(): Promise<User[]>{
         //get connection
         client = await connectionPool.connect()
         //send query
-        let results = await client.query(`select u.user_id, u.username, u."password", u.first_name, u_last_name, u.email, r."role", r.role_id from project_0.users	u 
-                            left join project_0.roles r on u."role" = r."role_id" ;`)
+        let results = await client.query(`select u.user_id, u.username, u."password", u.first_name, u.last_name, u.email, r."role", r.role_id from project_0.users	u 
+                            left join project_0.roles r on u."role" = r."role_id";`)
         //return results
         return results.rows.map(UserDTOtoUserConverter)
     } catch(e) {
@@ -27,13 +27,13 @@ export async function getAllUsers(): Promise<User[]>{
 }
 
 //find users by id
-export async function findUsersById (id: number): Promise<User> {
+export async function findUsersById (userId: number): Promise<User> {
     let client: PoolClient 
     try{ 
         client = await connectionPool.connect()
         let results: QueryResult = await client.query(`select u.user_id, u.username, u."password", u.first_name, u.last_name, u.email, r."role", r.role_id from project_0.users u 
                                                     left join project_0.roles r on u."role" = r."role_id" 
-                                                    where u.user_id = $1;`, [id])
+                                                    where u.user_id = $1;`, [userId])
         if (results.rowCount === 0){
             throw new Error('NotFound')
         } else {
@@ -41,7 +41,7 @@ export async function findUsersById (id: number): Promise<User> {
         }
     } catch(e) {
         if (e.message === "NotFound"){
-            throw new UserNotFoundError()
+            throw new UserNotFoundError
         }
         console.log(e);
         throw new Error ("This error can't be handled, like the way the ring can't be handled by anyone but Frodo")
@@ -56,21 +56,27 @@ export async function updateUser (updatedUser:User): Promise <User> {
 
     try {
         client = await connectionPool.connect()
-
-        let results = await client.query(`update project_0.users u
-                                            set u.username = $1, u."password"=$2, u.first_name=$3, u.last_name=$4, u.email=$5, u.role=$6
-                                            where u.user_id = $7`, 
-                                            [updatedUser.username, updatedUser.password, updatedUser.firstName, updatedUser.lastName, updatedUser.email, updatedUser.role.roleId, updatedUser.userId])
-
+        await client.query('BEGIN;') //start transaction
+        let roleId = await client.query(`select r.role_id from project_0.roles r where r."role" = $1`, [updatedUser.role])
+        if (roleId.rowCount === 0 ){ //if role not found
+            throw new Error("Role Not Found")
+        }
+        roleId = roleId.rows[0].role_id 
+        let results = await client.query(`update project_0.users
+                                            set username = $1, "password"=$2, first_name=$3, last_name=$4, email=$5, role=$6
+                                            where user_id = $7;`, 
+                                            [updatedUser.username, updatedUser.password, updatedUser.firstName, updatedUser.lastName, updatedUser.email, roleId, updatedUser.userId])
+        await client.query('COMMIT;') //end transaction
         if (results.rowCount === 0){
             throw new Error('NotFound')
         } else {
-            return findUsersById(updatedUser.userId)
+            return findUsersById(updatedUser.userId) //not sure this will workkkkkkkkkkkkkkkkkkkkkkkk
         }
 
     } catch(e) {
+        client && client.query('ROLLBACK;') //if a js error takes place
         if (e.message === "NotFound"){
-            throw new UserNotFoundError()
+            throw new UserNotFoundError
         }
         throw new Error ("This error can't be handled, like the way the ring can't be handled by anyone but Frodo")
     } finally {
@@ -83,16 +89,16 @@ export async function getUserByUsernameAndPassword (username:String, password:St
     let client: PoolClient 
     try{ 
         client = await connectionPool.connect()
-        let results: QueryResult = await client.query(`select u.user_id, u.username, u."password", u.first_name, u.last_name u.email, r."role", r.role_id from project_0.users u 
+        let results: QueryResult = await client.query(`select u.user_id, u.username, u."password", u.first_name, u.last_name, u.email, r."role", r.role_id from project_0.users u 
                                                     left join project_0.roles r on u."role" = r."role_id" 
                                                     where u.username = $1 and u.password = $2;`, [username, password])      
         if (results.rowCount === 0){
-            throw new Error('NotFound')
+            throw new Error("NotFound")
         } 
         return UserDTOtoUserConverter(results.rows[0]) 
     } catch(e) {
         if (e.message === "NotFound"){
-            throw new AuthFailureError()
+            throw new AuthFailureError
         }
         console.log(e);
         throw new Error ("This error can't be handled, like the way the ring can't be handled by anyone but Frodo")

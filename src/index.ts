@@ -1,13 +1,13 @@
 
 import express, { Request, Response, NextFunction } from "express"
 import { userRouter } from "./routers/user-router"
+import { reimbursementRouter } from "./routers/reimbursement-router"
 
 import { InvalidCredentials } from "./errors/Invalid-Credentials"
+import { getUserByUsernameAndPassword } from "./daos/users-dao"
 
 import { loggingMiddleware } from "./middleware/logging-Middleware"
 import { sessionMiddleware } from "./middleware/session-middleware"
-import { reimbursementRouter } from "./routers/reimbursement-router"
-import { getUserByUsernameAndPassword } from "./daos/users-dao"
 
 
 const app = express() //call application from express
@@ -26,11 +26,10 @@ app.use("/reimbursements", reimbursementRouter)
 
 app.post("/login", async (req: Request, res: Response, next: NextFunction)=>{
     //the bady/less efficient way. Could use decnstructing instead (see ./routers/book-router)
-    let username = req.body.username 
-    let password = req.body.password
+    let {username, password} =  req.body
     //if I didn't get a username or password, need error to give me both fields
     if (!username || !password){
-        throw new InvalidCredentials() 
+        next(new InvalidCredentials())
     } else {
        try {
             let user =await getUserByUsernameAndPassword(username, password)
@@ -39,8 +38,7 @@ app.post("/login", async (req: Request, res: Response, next: NextFunction)=>{
        } catch(e) {
            next(e)
        }
-    }
-    //must also make sure they are valid
+    }//must also make sure they are valid
 })
 
 //error handler we wrote that express redirects top level errors to

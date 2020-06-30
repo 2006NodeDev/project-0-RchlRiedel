@@ -4,7 +4,7 @@ import {reimbursementUserRouter } from './reimbursement-user-router'
 import { reimbursementStatusRouter } from './reimbursement-status-router'
 import { authorizationMiddleware } from '../middleware/authorization-middleware'
 import { ReimbursementInputError } from '../errors/Reimbursement-Input-Error'
-import { getAllReimbursements, saveOneReimbursement, updateReimbursement, findReimbursementById } from '../daos/reimbursements-dao'
+import { getAllReimbursements, saveOneReimbursement, updateReimbursement } from '../daos/reimbursements-dao'
 
 export const reimbursementRouter = express.Router()
 
@@ -15,7 +15,7 @@ reimbursementRouter.use("/author/userId", reimbursementUserRouter)
 reimbursementRouter.use("/status", reimbursementStatusRouter)
 
 //find all -- useful to check if submitting and updating work
-reimbursementRouter.get("/", async (req:Request, res:Response, next:NextFunction)=>{
+reimbursementRouter.get("/", authorizationMiddleware(["Finance-manager"]), async (req:Request, res:Response, next:NextFunction)=>{
     try {
         let allReimbursements = await getAllReimbursements()
         res.json(allReimbursements)
@@ -27,13 +27,22 @@ reimbursementRouter.get("/", async (req:Request, res:Response, next:NextFunction
 //submit new 
 reimbursementRouter.post("/", async (req:Request, res: Response, next: NextFunction) => {
     console.log(req.body) //check the req body
-    let {author, amount, dateSubmitted, description, type} = req.body 
-    
-    if (!author || !amount || !dateSubmitted || !description ){
-        throw new ReimbursementInputError()
+    let {amount, description, type} = req.body 
+    let author = req.session.user.userId
+
+    if (!author || !amount || !description ){
+        next(new ReimbursementInputError)
     } else {
         let newReimbursement: Reimbursement = {
-            reimbursementId:0, author, amount, dateSubmitted: new Date(), dateResolved: null, description, resolver: null, status:3, type
+            reimbursementId:0, 
+            author, 
+            amount, 
+            dateSubmitted: new Date(), 
+            dateResolved: null, 
+            description, 
+            resolver: null, 
+            status:3, 
+            type
         }
         newReimbursement.type = type || null
 
@@ -46,42 +55,57 @@ reimbursementRouter.post("/", async (req:Request, res: Response, next: NextFunct
     }   
 })
 
-
 //update existing
 reimbursementRouter.patch("/", authorizationMiddleware(["Finance-manager"]), async (req:Request, res: Response, next: NextFunction) => {
-    let {reimbursementId } = req.body
+    let {reimbursementId, author, amount, dateSubmitted, dateResolved, description, resolver, status, type } = req.body
     
     if (!reimbursementId || isNaN(reimbursementId)) {
             res.status(400).send("Please provide reimbursement Id number")
-    } else {
-        let reimbursement = await findReimbursementById(+reimbursementId)
-        
-        let author = req.body.author
-        let amount = req.body.amount
-        let dateSubmitted = req.body.dateSubmitted
-        let dateResolved = req.body.dateResolved
-        let description = req.body.description        
-        let resolver = req.body.resolver 
-        let type = req.body.type 
+    } else if (status === "Approved" || status === "Denied") {
+        let updatedReimbursement:Reimbursement = {
+            reimbursementId,
+            author,
+            amount,
+            dateSubmitted,
+            dateResolved: new Date(),
+            description,
+            resolver: req.session.user.userId,
+            status:1,
+            type
+        }
+        updatedReimbursement.author = author || undefined
+        updatedReimbursement.amount = amount || undefined
+        updatedReimbursement.description = description || undefined      
+        updatedReimbursement.status = status || undefined
+        updatedReimbursement.type = type || undefined
 
-        if (author) {
-            reimbursement.author = author
-        } if (amount) {
-            reimbursement.amount = amount
-        }  if (dateSubmitted) {
-            reimbursement.dateSubmitted = dateSubmitted
-        }  if (dateResolved) {
-            reimbursement.dateResolved = dateResolved
-        }  if (description) {
-            reimbursement.description = description
-        }  if (resolver) {
-            reimbursement.resolver = resolver
-        }  if (type) {
-            reimbursement.type = type
-        }  
         try {
-            let updatedReimbursement = await updateReimbursement(reimbursement)
-            res.json(updatedReimbursement)
+            let updatedReimbursementResults = await updateReimbursement(updatedReimbursement)
+            res.json(updatedReimbursementResults)
+        } catch (e) {
+            next(e)
+        }
+    } else {
+        let updatedReimbursement:Reimbursement = {
+            reimbursementId,
+            author,
+            amount,
+            dateSubmitted,
+            dateResolved,
+            description,
+            resolver,
+            status,
+            type
+        }
+        updatedReimbursement.author = author || undefined
+        updatedReimbursement.amount = amount || undefined
+        updatedReimbursement.description = description || undefined      
+        updatedReimbursement.status = status || undefined
+        updatedReimbursement.type = type || undefined
+
+        try {
+            let updatedReimbursementResults = await updateReimbursement(updatedReimbursement)
+            res.json(updatedReimbursementResults)
         } catch (e) {
             next(e)
         }

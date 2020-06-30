@@ -10,7 +10,7 @@ reimbursementUserRouter.get("/:userId", authorizationMiddleware(["Finance-manage
     let {userId} = req.params
     if(isNaN(+userId)){
         //send a response telling them they need to give us a number
-        next ( new UserIdNaN())
+        next (new UserIdNaN())
     } else {
        try {
             let reimbursement = await findReimbursementByAuthor(+userId)

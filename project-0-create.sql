@@ -40,7 +40,7 @@ create table reimbursements(
 	"author" int references users ("user_id") not null, --foreign key -> User, not null
 	"amount" numeric (12,2) not null,
     "date_submitted" timestamp not null, 
-    "date_resolved" timestamp not null,
+    "date_resolved" timestamp,
     "description" text not null,
     "resolver" int references users ("user_id"), -- different user (i.e. financial mangager
     "status" int references reimbursement_status ("status_id") not null, --fk ReimbursementStatus
