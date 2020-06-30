@@ -1,13 +1,13 @@
 
-import express, { Request, Response } from "express"
-import { userRouter, users } from "./routers/user-router"
+import express, { Request, Response, NextFunction } from "express"
+import { userRouter } from "./routers/user-router"
 
 import { InvalidCredentials } from "./errors/Invalid-Credentials"
-import { AuthFailureError } from "./errors/Authentification-Failure"
 
 import { loggingMiddleware } from "./middleware/logging-Middleware"
 import { sessionMiddleware } from "./middleware/session-middleware"
 import { reimbursementRouter } from "./routers/reimbursement-router"
+import { getUserByUsernameAndPassword } from "./daos/users-dao"
 
 
 const app = express() //call application from express
@@ -24,32 +24,23 @@ app.use(sessionMiddleware)
 app.use("/users", userRouter)
 app.use("/reimbursements", reimbursementRouter)
 
-app.post("/login", (req:Request, res:Response) => {
-//pretty much identical to what is in lightly-burning
-    let username = req.body.username
+app.post("/login", async (req: Request, res: Response, next: NextFunction)=>{
+    //the bady/less efficient way. Could use decnstructing instead (see ./routers/book-router)
+    let username = req.body.username 
     let password = req.body.password
-    
+    //if I didn't get a username or password, need error to give me both fields
     if (!username || !password){
-        throw new InvalidCredentials()
-        
+        throw new InvalidCredentials() 
     } else {
-        let found = false
-
-        for (const user of users) {
-            if (user.username === username && user.password === password){
-                req.session.user = user
-                console.log("Login Successful");
-                
-                res.json(user)
-                found = true
-            }
-        }
-        if (!found) {
-            console.log("Login unsuccessful");
-            throw new AuthFailureError()
-        }
+       try {
+            let user =await getUserByUsernameAndPassword(username, password)
+            req.session.user = user
+            res.json(user)
+       } catch(e) {
+           next(e)
+       }
     }
-
+    //must also make sure they are valid
 })
 
 //error handler we wrote that express redirects top level errors to
