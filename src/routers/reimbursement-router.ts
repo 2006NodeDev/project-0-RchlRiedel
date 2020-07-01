@@ -30,7 +30,7 @@ reimbursementRouter.post("/", async (req:Request, res: Response, next: NextFunct
     let {amount, description, type} = req.body 
     let author = req.session.user.userId
 
-    if (!author || !amount || !description ){
+    if (!author || !amount || !description || !type ){
         next(new ReimbursementInputError)
     } else {
         let newReimbursement: Reimbursement = {
@@ -44,7 +44,6 @@ reimbursementRouter.post("/", async (req:Request, res: Response, next: NextFunct
             status:3, 
             type
         }
-        newReimbursement.type = type || null
 
         try {
             let savedReimbrusement = await saveOneReimbursement(newReimbursement)
@@ -57,20 +56,21 @@ reimbursementRouter.post("/", async (req:Request, res: Response, next: NextFunct
 
 //update existing
 reimbursementRouter.patch("/", authorizationMiddleware(["Finance-manager"], false), async (req:Request, res: Response, next: NextFunction) => {
-    let {reimbursementId, author, amount, dateSubmitted, dateResolved, description, resolver, status, type } = req.body
+    let {reimbursementId, author, amount, description, status, type } = req.body
     
     if (!reimbursementId || isNaN(reimbursementId)) {
             res.status(400).send("Please provide reimbursement Id number")
-    } else if (status === "Approved" || status === "Denied") {
+    } 
+    if (status === "Approved" || status === "Denied") {
         let updatedReimbursement:Reimbursement = {
             reimbursementId,
             author,
             amount,
-            dateSubmitted,
+            dateSubmitted: undefined,
             dateResolved: new Date(),
             description,
             resolver: req.session.user.userId,
-            status:1,
+            status,
             type
         }
         updatedReimbursement.author = author || undefined
@@ -90,11 +90,11 @@ reimbursementRouter.patch("/", authorizationMiddleware(["Finance-manager"], fals
             reimbursementId,
             author,
             amount,
-            dateSubmitted,
-            dateResolved,
+            dateSubmitted: undefined,
+            dateResolved: null,
             description,
-            resolver,
-            status,
+            resolver: null,
+            status:3,
             type
         }
         updatedReimbursement.author = author || undefined

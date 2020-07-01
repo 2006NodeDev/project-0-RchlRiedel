@@ -65,11 +65,11 @@ export async function saveOneReimbursement(newReimbursement: Reimbursement): Pro
         //thus, we must "convert" using the reimbursement_type table to get the type_id
         let typeId = await client.query(`select rt.type_id from project_0.reimbursement_type rt 
                                         where rt."type" = $1;`, [newReimbursement.type])
-        if (typeId.rowCount === 0 && newReimbursement.type !== null){ //if type not found, but it can be null
+        if (typeId.rowCount === 0) { //make sure type != null
             throw new Error("Type Not Found")
+        } else {
+            typeId = typeId.rows[0].type_id 
         }
-        typeId = typeId.rows[0].type_id //get the type id number given the string of type
-        
         //statusId is specified in router, so we don't need to "convert" it here
 
         let results = await client.query(`insert into project_0.reimbursements ("author", "amount", "date_submitted", "date_resolved", "description", "resolver", "status", "type")
@@ -100,37 +100,90 @@ export async function updateReimbursement (updatedReimbursement:Reimbursement): 
         client = await connectionPool.connect()
         await client.query('BEGIN;') 
 
-        //get the type id number given the string of type
-        let typeId = await client.query(`select rt.type_id from project_0.reimbursement_type rt 
-                                        where rt."type" = $1;`, [updatedReimbursement.type])
-        if ( updatedReimbursement.type > 0 || updatedReimbursement.type < 5){ //if type not found, but it can be null
-            typeId = typeId.rows[0].type_id 
-        } else if (updatedReimbursement.type === null || updatedReimbursement.type === undefined){
-            typeId = null;
-        } else {
-            console.log(updatedReimbursement.type);
-            throw new Error("Type Not Found")
-
+        if (updatedReimbursement.author){
+            let results = await client.query(`update project_0.reimbursements
+                                                set author = $1 
+                                                where reimburserment_id =$2;`[updatedReimbursement.author, updatedReimbursement.reimbursementId])
+            if (results.rowCount === 0){
+                throw new Error("NotFound")
+            }
         }
-        //get the status id number given the string of status
-        let statusId = await client.query(`select rs.status.id from project_0.reimbursement_status rs 
-                                        where rs."status" = $1;`, [updatedReimbursement.status])
-        if (statusId.rowCount === 0){ 
-            throw new Error("Status Not Found")
+        if (updatedReimbursement.amount){
+            let results = await client.query(`update project_0.reimbursements
+                                                set amount = $1 
+                                                where reimburserment_id =$2;`[updatedReimbursement.amount, updatedReimbursement.reimbursementId])
+            if (results.rowCount === 0){
+                throw new Error("NotFound")
+            }
         }
-        statusId = statusId.rows[0].status_id 
+        if (updatedReimbursement.dateResolved){
+            let results = await client.query(`update project_0.reimbursements
+                                                set dateResolved = $1 
+                                                where reimburserment_id =$2;`[updatedReimbursement.dateResolved, updatedReimbursement.reimbursementId])
+            if (results.rowCount === 0){
+                throw new Error("NotFound")
+            }
+        }
+        if (updatedReimbursement.description){
+            let results = await client.query(`update project_0.reimbursements
+                                                set description = $1 
+                                                where reimburserment_id =$2;`[updatedReimbursement.description, updatedReimbursement.reimbursementId])
+            if (results.rowCount === 0){
+                throw new Error("NotFound")
+            }
+        }
+        if (updatedReimbursement.resolver){
+            let results = await client.query(`update project_0.reimbursements
+                                                set resolver = $1 
+                                                where reimburserment_id =$2;`[updatedReimbursement.resolver, updatedReimbursement.reimbursementId])
+            if (results.rowCount === 0){
+                throw new Error("NotFound")
+            }
+        }
+        if (updatedReimbursement.status ){
+            // let statusId = await client.query(`select rs.status_id from project_0.reimbursement_status rs 
+            //                                  where rs.status_id = $1;`, [updatedReimbursement.status])
+            // if (statusId.rowCount === 0)  { 
+            //     throw new Error("Status Not Found")
+            // } else {
+            //     statusId = statusId.rows[0].status_id 
+            // }
 
-        let results = await client.query(`update project_0.reimbursements
-                                        set author = $1, amount = $2, date_resolved = $4, description = $5, resolver = $6, status = $7, type = $8
-                                        where reimbursement_id = $7 returning reimbursement_id;`,  
-                                            [updatedReimbursement.author, updatedReimbursement.amount, updatedReimbursement.dateResolved, updatedReimbursement.description, 
-                                                updatedReimbursement.resolver, statusId, typeId, updatedReimbursement.reimbursementId]) 
+            let results = await client.query(`update project_0.reimbursements
+                                                set status = $1 
+                                                where reimburserment_id =$2;`[updatedReimbursement.status, updatedReimbursement.reimbursementId])
+            if (results.rowCount === 0){
+                throw new Error("NotFound")
+            }
+        }
+        if (updatedReimbursement.type){
+            //get the type id number given the string of type
+            // let typeId = await client.query(`select rt.type_id from project_0.reimbursement_type rt 
+            //                                 where rt.type_id = $1;`, [updatedReimbursement.type])
+            // if (typeId.rowCount === 0 ){ 
+            //     throw new Error("Type Not Found")
+            // } else {
+            //     typeId = typeId.rows[0].type_id
+            // }
+            let results = await client.query(`update project_0.reimbursements
+                                                set type = $1 
+                                                where reimburserment_id =$2;`[updatedReimbursement.type, updatedReimbursement.reimbursementId])
+            if (results.rowCount === 0){
+                throw new Error("NotFound")
+            }
+        }        
+        // let results = await client.query(`update project_0.reimbursements
+        //                                 set author = $1, amount = $2, date_resolved = $3, description = $4, resolver = $5, status = $6, type = $7
+        //                                 where reimbursement_id = $8 returning reimbursement_id;`,  
+        //                                     [updatedReimbursement.author, updatedReimbursement.amount, updatedReimbursement.dateResolved, updatedReimbursement.description, 
+        //                                         updatedReimbursement.resolver, updatedReimbursement.status, updatedReimbursement.type, updatedReimbursement.reimbursementId]) 
         await client.query('COMMIT;') 
-        if (results.rowCount === 0){
-            throw new Error('NotFound')
-        } else {
-        return findReimbursementById(results.rows[0])
-        }
+        return (findReimbursementById(updatedReimbursement.reimbursementId))
+        // if (results.rowCount === 0){
+        //     throw new Error('NotFound')
+        // } else {
+        // return findReimbursementById(results.rows[0])
+        // }
     } catch(e) {
         client && client.query('ROLLBACK;') 
         if (e.message == "Type Not Found"){

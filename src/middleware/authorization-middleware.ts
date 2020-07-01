@@ -6,8 +6,8 @@ export function authorizationMiddleware(roles:string[], currentUser: Boolean){ /
 
     return (req: Request, res:Response, next:NextFunction) =>{
         let allowed = false
-            //to allow a given role
-        for (const role of roles){
+            
+        for (const role of roles){//to allow a given role
             if (req.session.user.role.role === role){
                 allowed =true
                 console.log(`role: ${role}, input role:${req.session.user.role.role}`);
@@ -21,12 +21,12 @@ export function authorizationMiddleware(roles:string[], currentUser: Boolean){ /
                 }
             }
         }
-         if (allowed) { //have to wait to make sure both conditions are checked
+        if (allowed) { //have to wait to make sure both conditions are checked
             next() 
-         } else { 
+        } else { 
              //if they don't have a matching role or the right id, kick them out
              res.status(403).send("You have insufficient permissions for this endpoint!")
-         }
+        }
 
     }
 
