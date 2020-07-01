@@ -95,95 +95,54 @@ export async function saveOneReimbursement(newReimbursement: Reimbursement): Pro
 //update a reimbursement 
 export async function updateReimbursement (updatedReimbursement:Reimbursement): Promise <Reimbursement> {
     let client: PoolClient
-
     try {
         client = await connectionPool.connect()
         await client.query('BEGIN;') 
-
-        if (updatedReimbursement.author){
-            let results = await client.query(`update project_0.reimbursements
-                                                set author = $1 
-                                                where reimburserment_id =$2;`[updatedReimbursement.author, updatedReimbursement.reimbursementId])
-            if (results.rowCount === 0){
-                throw new Error("NotFound")
-            }
-        }
+        if (!updatedReimbursement.reimbursementId)
         if (updatedReimbursement.amount){
-            let results = await client.query(`update project_0.reimbursements
-                                                set amount = $1 
-                                                where reimburserment_id =$2;`[updatedReimbursement.amount, updatedReimbursement.reimbursementId])
-            if (results.rowCount === 0){
-                throw new Error("NotFound")
-            }
+            await client.query(`update project_0.reimbursements set "amount" = $1 where "reimbursement_id" = $2;`,
+                                [updatedReimbursement.amount, updatedReimbursement.reimbursementId])
         }
         if (updatedReimbursement.dateResolved){
-            let results = await client.query(`update project_0.reimbursements
-                                                set dateResolved = $1 
-                                                where reimburserment_id =$2;`[updatedReimbursement.dateResolved, updatedReimbursement.reimbursementId])
-            if (results.rowCount === 0){
-                throw new Error("NotFound")
-            }
+            await client.query(`update project_0.reimbursements set "date_resolved" = $1 where "reimbursement_id" = $2;`,
+                                [updatedReimbursement.dateResolved, updatedReimbursement.reimbursementId])
         }
         if (updatedReimbursement.description){
-            let results = await client.query(`update project_0.reimbursements
-                                                set description = $1 
-                                                where reimburserment_id =$2;`[updatedReimbursement.description, updatedReimbursement.reimbursementId])
-            if (results.rowCount === 0){
-                throw new Error("NotFound")
-            }
+            await client.query(`update project_0.reimbursements set "description" = $1 where "reimbursement_id" = $2;`,
+                                [updatedReimbursement.description, updatedReimbursement.reimbursementId])
         }
         if (updatedReimbursement.resolver){
-            let results = await client.query(`update project_0.reimbursements
-                                                set resolver = $1 
-                                                where reimburserment_id =$2;`[updatedReimbursement.resolver, updatedReimbursement.reimbursementId])
-            if (results.rowCount === 0){
-                throw new Error("NotFound")
-            }
+            await client.query(`update project_0.reimbursements set "resolver" = $1 where "reimbursement_id" = $2;`,
+                                [updatedReimbursement.resolver, updatedReimbursement.reimbursementId])
         }
-        if (updatedReimbursement.status ){
-            // let statusId = await client.query(`select rs.status_id from project_0.reimbursement_status rs 
-            //                                  where rs.status_id = $1;`, [updatedReimbursement.status])
-            // if (statusId.rowCount === 0)  { 
-            //     throw new Error("Status Not Found")
-            // } else {
-            //     statusId = statusId.rows[0].status_id 
-            // }
-
-            let results = await client.query(`update project_0.reimbursements
-                                                set status = $1 
-                                                where reimburserment_id =$2;`[updatedReimbursement.status, updatedReimbursement.reimbursementId])
-            if (results.rowCount === 0){
-                throw new Error("NotFound")
+        if (updatedReimbursement.status){
+            let statusId = await client.query(`select s."status_id" from project_0.reimbursement_status s
+                            where s."status" = $1;`, [updatedReimbursement.status])
+            if(statusId.rowCount === 0){
+                throw new Error('Status Not Found')
             }
+            statusId = statusId.rows[0].status_id
+            await client.query(`update project_0.reimbursements set "status" = $1 where "reimbursement_id" = $2;`,
+                                [statusId, updatedReimbursement.reimbursementId])
+                            
         }
         if (updatedReimbursement.type){
-            //get the type id number given the string of type
-            // let typeId = await client.query(`select rt.type_id from project_0.reimbursement_type rt 
-            //                                 where rt.type_id = $1;`, [updatedReimbursement.type])
-            // if (typeId.rowCount === 0 ){ 
-            //     throw new Error("Type Not Found")
-            // } else {
-            //     typeId = typeId.rows[0].type_id
-            // }
-            let results = await client.query(`update project_0.reimbursements
-                                                set type = $1 
-                                                where reimburserment_id =$2;`[updatedReimbursement.type, updatedReimbursement.reimbursementId])
-            if (results.rowCount === 0){
-                throw new Error("NotFound")
+            let typeId = await client.query(`select t."type_id" from project_0.reimbursement_type t
+                            where t."type" = $1;`, [updatedReimbursement.type])
+            if(typeId.rowCount === 0){
+                throw new Error('Type Not Found')
             }
-        }        
-        // let results = await client.query(`update project_0.reimbursements
-        //                                 set author = $1, amount = $2, date_resolved = $3, description = $4, resolver = $5, status = $6, type = $7
-        //                                 where reimbursement_id = $8 returning reimbursement_id;`,  
-        //                                     [updatedReimbursement.author, updatedReimbursement.amount, updatedReimbursement.dateResolved, updatedReimbursement.description, 
-        //                                         updatedReimbursement.resolver, updatedReimbursement.status, updatedReimbursement.type, updatedReimbursement.reimbursementId]) 
-        await client.query('COMMIT;') 
-        return (findReimbursementById(updatedReimbursement.reimbursementId))
-        // if (results.rowCount === 0){
-        //     throw new Error('NotFound')
-        // } else {
-        // return findReimbursementById(results.rows[0])
-        // }
+            typeId = typeId.rows[0].type_id
+            await client.query(`update project_0.reimbursements set "type" = $1 where "reimbursement_id" = $2;`,
+                                [typeId, updatedReimbursement.reimbursementId])
+            
+        }
+        
+        await client.query('COMMIT;') //end transaction
+
+        return findReimbursementById(updatedReimbursement.reimbursementId)
+    
+
     } catch(e) {
         client && client.query('ROLLBACK;') 
         if (e.message == "Type Not Found"){
@@ -200,6 +159,7 @@ export async function updateReimbursement (updatedReimbursement:Reimbursement): 
     } finally {
         client && client.release()
     }
+
 }
 
 

@@ -58,7 +58,7 @@ reimbursementRouter.post("/", async (req:Request, res: Response, next: NextFunct
 reimbursementRouter.patch("/", authorizationMiddleware(["Finance-manager"], false), async (req:Request, res: Response, next: NextFunction) => {
     let {reimbursementId, author, amount, description, status, type } = req.body
     
-    if (!reimbursementId || isNaN(reimbursementId)) {
+    if (!reimbursementId || isNaN(reimbursementId) ) {
             res.status(400).send("Please provide reimbursement Id number")
     } 
     if (status === "Approved" || status === "Denied") {
