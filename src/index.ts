@@ -10,7 +10,7 @@ import { loggingMiddleware } from "./middleware/logging-Middleware"
 import { sessionMiddleware } from "./middleware/session-middleware"
 
 
-const app = express() //call application from express
+const app = express() //out application from express
 
 app.get("/", (req, res) => { 
      res.send("Hello World!")
@@ -25,9 +25,8 @@ app.use("/users", userRouter)
 app.use("/reimbursements", reimbursementRouter)
 
 app.post("/login", async (req: Request, res: Response, next: NextFunction)=>{
-    //the bady/less efficient way. Could use decnstructing instead (see ./routers/book-router)
     let {username, password} =  req.body
-    //if I didn't get a username or password, need error to give me both fields
+
     if (!username || !password){
         next(new InvalidCredentials())
     } else {
@@ -38,7 +37,7 @@ app.post("/login", async (req: Request, res: Response, next: NextFunction)=>{
        } catch(e) {
            next(e)
        }
-    }//must also make sure they are valid
+    }
 })
 
 //error handler we wrote that express redirects top level errors to
@@ -46,14 +45,12 @@ app.use((err, req, res, next) => {
     
     if (err.statusCode) { 
         res.status(err.statusCode).send(err.message)
-    } else { //if it wasn't one of our custom errors
+    } else { //if it wasn't one of our custom errors, send generic response
         console.log(err); 
-        res.status(500).send("Oops, something went wrong") //send generic error response
+        res.status(500).send("Oops, something went wrong")
     }
-
 })
 
-
-app.listen(2007, () => { //start server on port 2714
+app.listen(2007, () => { //start server on port 2007
     console.log("Server has started");
 })

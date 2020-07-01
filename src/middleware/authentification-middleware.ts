@@ -1,7 +1,6 @@
 
 import { Request, Response, NextFunction } from "express";
 
-//same from lightly-burning
 export  function authentificationMiddleware (req:Request, res:Response, next:NextFunction){
     if (!req.session.user){
         res.status(401).send('Please login') //could be a custom error

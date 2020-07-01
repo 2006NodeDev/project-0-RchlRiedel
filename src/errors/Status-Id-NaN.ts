@@ -5,6 +5,6 @@ import { HttpError } from "./HttpError";
 
 export class StatusIdNaN extends HttpError {
     constructor (){
-        super (400, "Status Id must be a number!")
+        super (400, "Status id must be a number!")
     }
 }

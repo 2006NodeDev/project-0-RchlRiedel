@@ -1,6 +1,5 @@
 import { HttpError } from "./HttpError";
 
-//specific implementation of HttpError
 export class ReimbursementInputError extends HttpError {
 
     constructor(){

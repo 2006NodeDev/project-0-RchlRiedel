@@ -4,28 +4,27 @@ import { authentificationMiddleware } from '../middleware/authentification-middl
 import { authorizationMiddleware } from '../middleware/authorization-middleware'
 import { getAllUsers, updateUser, findUsersById } from '../daos/users-dao'
 import { User } from '../models/User'
-import { UserIdNaN } from '../errors/User-Id-NaN'
+import { UserIdNumberNeededError } from '../errors/User-Id-Number-Needed-Error'
 
 export const userRouter = express.Router()
 
 //Use login
 userRouter.use(authentificationMiddleware)
 
-//Find Users -- check instructions for authorization persmission
-userRouter.get("/", authorizationMiddleware(["Finance-manager", "Admin"]), async (req:Request, res:Response, next:NextFunction)=>{
+//Find Users 
+userRouter.get("/", authorizationMiddleware(["Finance-manager", "Admin"], false), async (req:Request, res:Response, next:NextFunction)=>{
     try {
-        //Let's try not being asynch and see what happens
-        let allUsers = await getAllUsers() //thinking in abstraction
+        let allUsers = await getAllUsers() 
         res.json(allUsers)
     } catch(e){
         next(e)
     }})
 
 //Find user by id
-userRouter.get("/:userId",  authorizationMiddleware(["Finance-manager", "Admin"]), async (req:Request, res:Response, next:NextFunction)=>{
+userRouter.get("/:userId",  authorizationMiddleware(["Finance-manager", "Admin"], true), async (req:Request, res:Response, next:NextFunction)=>{
     let {userId} = req.params
     if(isNaN(+userId)){
-        next(new UserIdNaN)
+        next(new UserIdNumberNeededError)
     } else {
         try {
             let user = await findUsersById(+userId)
@@ -37,12 +36,12 @@ userRouter.get("/:userId",  authorizationMiddleware(["Finance-manager", "Admin"]
 })
 
 //Update user
-userRouter.patch("/", authorizationMiddleware(["Admin"]), async (req:Request, res: Response, next:NextFunction) => {
+userRouter.patch("/", authorizationMiddleware(["Admin"], false), async (req:Request, res: Response, next:NextFunction) => {
     let {userId, username, password, firstName, lastName, email, role } = req.body
 
     if (!userId || isNaN(req.body.userId)){
-        res.status(400).send('Please provide user Id number')
-    } else { //changed because other way (going off of id) was being complicated
+        next (new UserIdNumberNeededError)
+    } else { 
         let updatedUser:User = {
             userId,
             username,

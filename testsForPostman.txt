@@ -49,7 +49,7 @@ Get all reimbursements, reimbursements given status id, or reimbursements given 
 Can update reimbursements:
 {
     "reimbursementId": 9,
-    "description": "Potatoes for stew"
+    "description": "Potatoes for boiling, mashing, and putting in a stew"
 }
 Mark as Approved:
 {

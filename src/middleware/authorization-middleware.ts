@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 
 
 //same from lightly-burning
-export function authorizationMiddleware(roles:string[], userId?: boolean){ //get the roles, or see if they have an id
+export function authorizationMiddleware(roles:string[], currentUser: Boolean){ //get the roles, or check if their id matches
 
     return (req: Request, res:Response, next:NextFunction) =>{
         let allowed = false
@@ -13,10 +13,10 @@ export function authorizationMiddleware(roles:string[], userId?: boolean){ //get
                 console.log(`role: ${role}, input role:${req.session.user.role.role}`);
             }
         }
-        if (userId){ 
+        if (currentUser){  //if we are checking for current user
             let id = +req.params.userId //get the id from path
             if (!isNaN(id)){
-                if (req.session.user.userId === id) { //watch for type coersion
+                if (req.session.user.userId == id) { //watch for type coersion
                     allowed = true
                 }
             }

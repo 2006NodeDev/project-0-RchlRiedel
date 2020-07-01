@@ -7,7 +7,7 @@ import { findReimbursementByStatus } from '../daos/reimbursements-dao'
 export const reimbursementStatusRouter = express.Router()
 
 //get reimbursements based on status id
-reimbursementStatusRouter.get("/:statusId", authorizationMiddleware(["Finance-manager"]), async (req:Request, res:Response, next: NextFunction)=>{ //Need specific authorization?
+reimbursementStatusRouter.get("/:statusId", authorizationMiddleware(["Finance-manager"], false), async (req:Request, res:Response, next: NextFunction)=>{ //Need specific authorization?
     let {statusId} = req.params
     if(isNaN(+statusId)){
         //send a response telling them they need to give us a number

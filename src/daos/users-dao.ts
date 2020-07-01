@@ -70,14 +70,15 @@ export async function updateUser (updatedUser:User): Promise <User> {
         if (results.rowCount === 0){
             throw new Error('NotFound')
         } else {
-            return findUsersById(updatedUser.userId) //not sure this will workkkkkkkkkkkkkkkkkkkkkkkk
+            return findUsersById(updatedUser.userId)
         }
 
     } catch(e) {
-        client && client.query('ROLLBACK;') //if a js error takes place
+        client && client.query('ROLLBACK;') //if a js error takes place, send it back
         if (e.message === "NotFound"){
             throw new UserNotFoundError
         }
+        console.log(e);
         throw new Error ("This error can't be handled, like the way the ring can't be handled by anyone but Frodo")
     } finally {
         client && client.release()

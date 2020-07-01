@@ -15,7 +15,7 @@ reimbursementRouter.use("/author/userId", reimbursementUserRouter)
 reimbursementRouter.use("/status", reimbursementStatusRouter)
 
 //find all -- useful to check if submitting and updating work
-reimbursementRouter.get("/", authorizationMiddleware(["Finance-manager"]), async (req:Request, res:Response, next:NextFunction)=>{
+reimbursementRouter.get("/", authorizationMiddleware(["Finance-manager"], false), async (req:Request, res:Response, next:NextFunction)=>{
     try {
         let allReimbursements = await getAllReimbursements()
         res.json(allReimbursements)
@@ -26,7 +26,7 @@ reimbursementRouter.get("/", authorizationMiddleware(["Finance-manager"]), async
 
 //submit new 
 reimbursementRouter.post("/", async (req:Request, res: Response, next: NextFunction) => {
-    console.log(req.body) //check the req body
+    
     let {amount, description, type} = req.body 
     let author = req.session.user.userId
 
@@ -48,7 +48,7 @@ reimbursementRouter.post("/", async (req:Request, res: Response, next: NextFunct
 
         try {
             let savedReimbrusement = await saveOneReimbursement(newReimbursement)
-            res.json(savedReimbrusement) //must send back after assigning userID
+            res.json(savedReimbrusement) 
         } catch(e) {
             next(e)
         }
@@ -56,7 +56,7 @@ reimbursementRouter.post("/", async (req:Request, res: Response, next: NextFunct
 })
 
 //update existing
-reimbursementRouter.patch("/", authorizationMiddleware(["Finance-manager"]), async (req:Request, res: Response, next: NextFunction) => {
+reimbursementRouter.patch("/", authorizationMiddleware(["Finance-manager"], false), async (req:Request, res: Response, next: NextFunction) => {
     let {reimbursementId, author, amount, dateSubmitted, dateResolved, description, resolver, status, type } = req.body
     
     if (!reimbursementId || isNaN(reimbursementId)) {

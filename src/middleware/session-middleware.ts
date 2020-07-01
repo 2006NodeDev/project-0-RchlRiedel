@@ -3,14 +3,13 @@ import session, { SessionOptions } from 'express-session'
 
 //config object
 const sessionConfig:SessionOptions = {
-    secret: "secret", //FIX WHEN LEARNED ABOUT
+    secret: "secret", 
     cookie:{
         secure:false 
     },
     resave:false,
     saveUninitialized:false
 }
-
 
 //function factory
 export const sessionMiddleware = session(sessionConfig) 

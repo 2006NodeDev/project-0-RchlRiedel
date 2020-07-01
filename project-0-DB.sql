@@ -44,6 +44,8 @@ insert into reimbursements ("author", "amount", "date_submitted", "date_resolved
 			(1, 79.99, '1954-07-01 00:00:00', '1954-07-11 00:00:00', 'New rodes, since I am white now', 6, 1, 4),
 			(4, 10.23, '1954-08-01 00:00:00', '1954-08-11 00:00:00', 'Bought a fake mustache for Eowyn to blend in a bit, even if she is no man', 1, 3, 4);
 
+		
+--test queries
 
 --getAllReimbursements		
 --select * from reimbursements r 
@@ -92,6 +94,8 @@ insert into reimbursements ("author", "amount", "date_submitted", "date_resolved
 	--left join project_0.reimbursement_type rt on r."type" = rt.type_id
 	--where r.reimbursement_id = 9;
 	
+		
+		
 --getAllUsers                                                    
 --select u.user_id, u.username, u."password", u.first_name, u.last_name, u.email, r."role", r.role_id 
 	--from project_0.users u left join project_0.roles r on u."role" = r."role_id";
