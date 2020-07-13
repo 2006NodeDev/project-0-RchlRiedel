@@ -47,9 +47,6 @@ insert into reimbursements ("author", "amount", "date_submitted", "date_resolved
 		
 --test queries
 
-select rt.type_id from project_0.reimbursement_type rt 
-                                        where rt."type" = 'Provisions';
-
 --getAllReimbursements		
 --select * from reimbursements r 
 	--left join  users u on r.author = u.user_id

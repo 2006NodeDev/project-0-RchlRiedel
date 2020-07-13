@@ -1,5 +1,5 @@
 
-import express, { Request, Response, NextFunction } from "express"
+import express, { Request, Response, NextFunction, request, response } from "express"
 import { userRouter } from "./routers/user-router"
 import { reimbursementRouter } from "./routers/reimbursement-router"
 
@@ -23,6 +23,12 @@ app.use(sessionMiddleware)
 
 app.use("/users", userRouter)
 app.use("/reimbursements", reimbursementRouter)
+
+//edited after submission for demos
+//health check
+app.get('/health', (req: Request, res: Response) => {
+    res.sendStatus(200)
+})
 
 app.post("/login", async (req: Request, res: Response, next: NextFunction)=>{
     let {username, password} =  req.body

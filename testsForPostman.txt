@@ -44,7 +44,7 @@ Now login as Finance-Manager
 	"password": "Actually87"
 
 }
-Get all reimbursements, reimbursements given status id, or reimbursements given author id
+Get all users, reimbursements, reimbursements given status id, or reimbursements given author id
 
 Can update reimbursements:
 {
