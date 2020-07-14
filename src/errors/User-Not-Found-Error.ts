@@ -1,4 +1,4 @@
-import { HttpError } from "./HttpError";
+import { HttpError } from "./Http-Error";
 
 export class UserNotFoundError extends HttpError {
     constructor(){

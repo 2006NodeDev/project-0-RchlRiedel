@@ -1,34 +1,29 @@
+//DO WE NEED ROLES?
 
-import express, { Request, Response, NextFunction, request, response } from "express"
+import express, { Request, Response, NextFunction } from "express"
 import { userRouter } from "./routers/user-router"
-import { reimbursementRouter } from "./routers/reimbursement-router"
 
-import { InvalidCredentials } from "./errors/Invalid-Credentials"
+import { InvalidCredentials } from "./errors/Invalid-Credentials-Error"
 import { getUserByUsernameAndPassword } from "./daos/users-dao"
 
-import { loggingMiddleware } from "./middleware/logging-Middleware"
+import { loggingMiddleware } from "./middleware/logging-middleware"
 import { sessionMiddleware } from "./middleware/session-middleware"
+import { corsFilter } from "./middleware/cors-filter"
 
 
 const app = express() //out application from express
 
-app.get("/", (req, res) => { 
-     res.send("Hello World!")
- })
+// app.get("/", (req, res) => { 
+//      res.send("Hello World!")
+//  })
 
 app.use(express.json()) 
 
 app.use(loggingMiddleware)
+app.use(corsFilter)
 app.use(sessionMiddleware)
 
 app.use("/users", userRouter)
-app.use("/reimbursements", reimbursementRouter)
-
-//edited after submission for demos
-//health check
-app.get('/health', (req: Request, res: Response) => {
-    res.sendStatus(200)
-})
 
 app.post("/login", async (req: Request, res: Response, next: NextFunction)=>{
     let {username, password} =  req.body

@@ -1,5 +1,4 @@
-import { HttpError } from "./HttpError";
-
+import { HttpError } from "./Http-Error";
 
 export class InvalidCredentials extends HttpError {
     constructor (){

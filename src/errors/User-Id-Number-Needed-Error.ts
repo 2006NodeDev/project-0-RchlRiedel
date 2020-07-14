@@ -1,5 +1,5 @@
 
-import { HttpError } from "./HttpError";
+import { HttpError } from "./Http-Error";
 
 //for when trying to retrieve user information by id number
 

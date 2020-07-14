@@ -3,7 +3,7 @@ import { connectionPool } from ".";
 import { UserDTOtoUserConverter } from "../utilities/UserDTO-to-Users-converter";
 import { User } from "../models/User";
 import { UserNotFoundError } from "../errors/User-Not-Found-Error";
-import { AuthFailureError } from "../errors/Authentification-Failure";
+import { AuthFailureError } from "../errors/Authentification-Failure-Error";
 import { RoleNotFoundError } from "../errors/Role-Not-Found-Error";
 
 export async function getAllUsers(): Promise<User[]>{
@@ -79,6 +79,7 @@ export async function updateUser (updatedUser:User): Promise <User> {
             await client.query(`update project_0.users set email = $1 where user_id = $2;`,
                                 [updatedUser.email, updatedUser.userId])
         }
+        //FIX THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if (updatedUser.role){
             let roleId = await client.query(`select r.role_id from project_0.roles r where r."role" = $1;`, [updatedUser.role])
             if (roleId.rowCount === 0 ){ //if role not found
